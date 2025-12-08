@@ -1,0 +1,20 @@
+{
+  "notes": [
+    {
+      "content": "practice drawing"
+    }
+  ],
+  "tasks": [],
+  "reminders": [
+    {
+      "id": 1,
+      "text": "Practice coding for the interview",
+      "time": "2025-12-02T17:00",
+      "triggered": true
+    },
+    {
+      "text": "reminder for 5:00 pm",
+      "time": "2025-12-03 17:00"
+    }
+  ]
+}
