@@ -1,6 +1,7 @@
 const { spawn } = require("child_process");
 const path = require("path");
 const si = require("systeminformation");
+const os = require('os'); 
 
 // ========= PATHS / CONFIG =========
 let pythonPath;

@@ -11,7 +11,9 @@
   "license": "ISC",
   "description": "Orion HUD",
   "dependencies": {
-    "electron": "^39.2.4",
     "systeminformation": "^5.27.11"
+  },
+  "devDependencies": {
+    "electron": "^39.2.6"
   }
 }

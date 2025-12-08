@@ -1,0 +1,9 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Electron / Node
+orion-assistant/orion-desktop/node_modules/
+orion-assistant/orion-desktop/dist/
+orion-assistant/orion-desktop/build/
