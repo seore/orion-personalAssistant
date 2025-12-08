@@ -1,0 +1,14 @@
+{
+  "user_name": "Seore",
+  "preferred_greeting": "sir",
+  "favorite_playlist": "Motherland",
+  "common_tasks": ["drawing practice", "gym", "coding"],
+  "frequent_commands": {
+    "open_app": ["VS Code", "Safari"]
+  },
+  "preferences": {
+    "voice": "Samantha",
+    "volume": 60,
+    "weather_units": "celsius"
+  }
+}
