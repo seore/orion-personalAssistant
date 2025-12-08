@@ -1,13 +1,35 @@
 import os
 import json
+import re
 
 from datetime import datetime
 from . import memory
 
 import requests
+import pytz 
 import PyPDF2
 import textwrap
 
+TIME_ZONES = {
+    "japan": "Asia/Tokyo",
+    "tokyo": "Asia/Tokyo",
+
+    "south africa": "Africa/Johannesburg",
+    "johannesburg": "Africa/Johannesburg",
+
+    "uk": "Europe/London",
+    "england": "Europe/London",
+    "london": "Europe/London",
+
+    "germany": "Europe/Berlin",
+    "berlin": "Europe/Berlin",
+
+    "usa": "America/New_York",
+    "new york": "America/New_York",
+
+    "california": "America/Los_Angeles",
+    "los angeles": "America/Los_Angeles",
+}
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("ORION_LLM_MODEL", "llama3")
@@ -146,7 +168,7 @@ You are ORION, a highly advanced desktop AI modeled after a refined, Jarvis-like
 You communicate formally, calmly, and efficiently, with subtle dry wit.
 
 Guidelines:
-- Address the user as "sir" (or "ma’am" if user identifies so) when appropriate.
+- Address the user as "ma’am" (or "sir" if user identifies so) when appropriate.
 - Maintain a composed, intelligent tone at all times.
 - Never be emotional or overly casual.
 - Give concise answers unless the user asks for detail.
@@ -194,6 +216,7 @@ def _call_ollama_chat(system_prompt: str, user_text: str) -> str:
     resp.raise_for_status()
     data = resp.json()
     return data["message"]["content"].strip()
+
 
 def _read_text_file(path: str) -> str:
     with open(path, "r", encoding="utf-8", errors="ignore") as f:
@@ -294,7 +317,12 @@ def _generate_chat_reply(user_text: str) -> str:
     except Exception as e:
         # Last-resort fallback if local model is down
         return f"I'm here, but something went wrong talking to my language core: {e}"
+    
 
+def _time_in_timezone(tz_name: str) -> str:
+    tz = pytz.timezone(tz_name)
+    now = datetime.now(tz)
+    return now.strftime("%I:%M %p")  # e.g. 07:32 PM
 
 
 def interpret_natural_language(user_text: str) -> dict:
@@ -302,6 +330,46 @@ def interpret_natural_language(user_text: str) -> dict:
     Return a command dict:
       { "intent": "...", "args": {...}, "reply": "..." }
     """
+    text_lower = user_text.lower().strip()
+
+    # --- FAST PATH: handle time queries locally, no LLM ---
+    if "time" in text_lower:
+        # e.g. "what's the time in japan", "time in south africa?"
+        match = re.search(r"\btime\b.*\bin\s+([a-zA-Z\s]+)\??$", text_lower)
+        if match:
+            place_raw = match.group(1).strip()
+            key = place_raw.lower()
+            tz_name = TIME_ZONES.get(key)
+
+            if tz_name:
+                time_str = _time_in_timezone(tz_name)
+                return {
+                    "intent": "tell_time",
+                    "args": {"place": place_raw, "timezone": tz_name},
+                    "reply": f"The time in {place_raw} is {time_str}.",
+                }
+            else:
+                # Unknown place – still answer local time so it never crashes
+                local_now = datetime.now().strftime("%I:%M %p")
+                return {
+                    "intent": "tell_time",
+                    "args": {"place": place_raw, "timezone": None},
+                    "reply": (
+                        f"I'm not sure about the timezone for {place_raw}, "
+                        f"but right now my local time is {local_now}."
+                    ),
+                }
+
+        # No specific place, just "what time is it?"
+        local_now = datetime.now().strftime("%I:%M %p")
+        return {
+            "intent": "tell_time",
+            "args": {"place": None, "timezone": None},
+            "reply": f"It is {local_now} right now.",
+        }
+
+    # --- ORIGINAL LLM-BASED FLOW BELOW HERE ---
+
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     # read current preferences for the system prompt
