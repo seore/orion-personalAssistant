@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Orion Desktop HUD</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="logo-text">O.R.I.O.N</span>
+      <span class="status-pill online">
+        <span class="dot"></span>
+        Online
+      </span>
+    </div>
+    
+    <!--
+    <div class="topbar-center">
+      <span class="time-pill">
+        <span id="hud-time">02:52:27</span>
+        <span class="separator">|</span>
+        <span id="hud-date">2 December 2025</span>
+      </span>
+    </div> -->
+
+    <div class="topbar-right">
+      <span class="weather-pill">
+        <span id="hud-temp">10°C</span>
+        <span class="separator">|</span>
+        <span id="hud-location">London, United Kingdom</span>
+      </span>
+      <button class="icon-btn small" id="settings-btn">⚙</button>
+    </div>
+  </header>
+
+  <!-- MAIN LAYOUT: JUST THE ORION CORE -->
+  <main class="main-layout">
+    <section class="center-pane">
+      <div class="hud-center">
+        <div class="hud-ring" id="hud-ring">
+          <div class="hud-ring-inner">
+            <div class="hud-ring-core">
+              <!--
+              <div class="orion-wave" id="orion-wave">
+                <span></span><span></span><span></span><span></span><span></span>
+              </div> -->
+              <div class="hud-core-label">O.R.I.O.N</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-status">
+          <span class="status-dot"></span>
+          <span id="hud-listen-text">Orion is idle.</span>
+        </div>
+
+        <!--<button id="voice-btn" class="voice-btn">
+          <span class="mic-icon">🎙</span>
+          <span>Voice Command</span>
+        </button>-->
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="renderer.js"></script>
+</body>
+</html>
