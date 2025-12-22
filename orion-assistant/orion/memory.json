@@ -1,8 +1,9 @@
 {
   "preferences": {
-    "fav_playlist": "Motherland"
+    "fav_playlist": "Motherland",
+    "music_mood": "fela_kuti"
   },
   "stats": {
-    "commands_seen": 36
+    "commands_seen": 53
   }
 }
