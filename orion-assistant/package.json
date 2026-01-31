@@ -148,7 +148,12 @@
   "description": "Your personal AI desktop assistant powered by Claude",
   "build": {
     "appId": "com.orion.assistant",
-    "productName": "Orion",
+    "productName": "Titan",
+    "asar": true,
+    "asarUnpack": [
+      "voice_daemon.py",
+      "orion/**/*"
+    ],
     "files": [
       "**/*",
       "!venv/**/*",
@@ -166,7 +171,7 @@
       "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "dmg": {
-      "title": "Orion Assistant"
+      "title": "Titan Assistant"
     }
   }
 }
