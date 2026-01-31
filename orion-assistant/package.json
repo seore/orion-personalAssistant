@@ -29,7 +29,6 @@
     "dotenv": "^17.2.3",
     "dunder-proto": "^1.0.1",
     "ee-first": "^1.1.1",
-    "electron": "^39.2.6",
     "encodeurl": "^2.0.0",
     "end-of-stream": "^1.4.5",
     "env-paths": "^2.2.1",
@@ -131,13 +130,43 @@
     "wrappy": "^1.0.2",
     "yauzl": "^2.10.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "electron": "^40.1.0",
+    "electron-builder": "^26.4.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "electron .",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "dist": "electron-builder",
+    "pack": "electron-builder --dir"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "Your personal AI desktop assistant powered by Claude",
+  "build": {
+    "appId": "com.orion.assistant",
+    "productName": "Orion",
+    "files": [
+      "**/*",
+      "!venv/**/*",
+      "!**/__pycache__/**/*",
+      "!**/*.pyc",
+      "!.git/**/*",
+      "!*.md",
+      "!build.sh"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": ["dmg", "zip"],
+      "icon": "build/icon.icns",
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "dmg": {
+      "title": "Orion Assistant"
+    }
+  }
 }
