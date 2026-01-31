@@ -7,3 +7,15 @@ __pycache__/
 orion-assistant/orion-desktop/node_modules/
 orion-assistant/orion-desktop/dist/
 orion-assistant/orion-desktop/build/
+
+# Electron build output (if you build it)
+dist/
+out/
+release/
+*.app
+*.exe
+*.dmg
+*.deb
+*.rpm
+
+.env

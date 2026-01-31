@@ -1,6 +1,7 @@
 import subprocess
 import speech_recognition as sr
 import sys
+import threading
 import time
 
 IS_MAC = sys.platform == "darwin"
@@ -36,17 +37,20 @@ def mac_say(text: str):
     _last_spoken = key
     _last_spoken_time = now
 
-    try:
-        if IS_MAC:
-            subprocess.Popen(["say", "-v", ORION_VOICE, "-r", ORION_RATE, text])
-        elif IS_WIN:
-            _ensure_tts_engine()
-            _tts_engine.say(text)
-            _tts_engine.runAndWait()
-        else:
-            print("[Orion voice]", text)
-    except Exception:
-        pass
+    def speak_thread():
+        try:
+            if IS_MAC:
+                subprocess.Popen(["say", "-v", ORION_VOICE, "-r", ORION_RATE, text])
+            elif IS_WIN:
+                _ensure_tts_engine()
+                _tts_engine.say(text)
+                _tts_engine.runAndWait()
+            else:
+                print("[Orion voice]", text)
+        except Exception:
+          pass
+    
+    threading.Thred(target=speak_thread, daemon=True).start()
 
 
 def listen_from_mic(timeout: float = 2.0, phrase_time_limit: float = 6.0) -> str:
@@ -80,3 +84,10 @@ def listen_from_mic(timeout: float = 2.0, phrase_time_limit: float = 6.0) -> str
     except Exception as e:
         print(f"[Orion] Unexpected STT error: {e}", file=sys.stderr)
         return ""
+
+def speak_from_command(cmd: dict):
+    """cmd example: {"intent":"say_text","args":{"text":"Hello"}}"""
+    if cmd.get("intent") == "say_text":
+        text = cmd.get("args", {}).get("text", "")
+        mac_say(text)
+

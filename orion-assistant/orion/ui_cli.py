@@ -7,7 +7,7 @@ from datetime import datetime
 
 from . import core
 from . import memory
-from .brain import interpret_natural_language, summarize_file
+from .brain import get_cloud_command, handle_user_text, summarize_file
 from .voice import listen_from_mic, mac_say
 from .reminders import start_reminder_thread
 from .core import get_due_reminders
@@ -286,6 +286,8 @@ def run_cli():
                 if not spoken:
                     continue
                 user_text = spoken
+            
+            handle_user_text(user_text)
 
             # catch new due reminders immediately (internal ones)
             with lock:
@@ -296,7 +298,7 @@ def run_cli():
                 mac_say(msg)
 
             print("[Orion] Thinking...")
-            cmd = interpret_natural_language(user_text)
+            cmd = get_cloud_command(user_text)
 
             with lock:
                 reply = dispatch_command(data, cmd)
@@ -310,3 +312,4 @@ def run_cli():
         stop_event.set()
         thread.join(timeout=1)
         print("[Orion] Goodbye.")
+

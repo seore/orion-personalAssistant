@@ -3,6 +3,10 @@ import json
 import re
 
 from datetime import datetime
+import threading
+
+from orion.ui_cli import dispatch_command
+from orion.voice import mac_say
 from . import memory
 
 import requests
@@ -33,6 +37,7 @@ TIME_ZONES = {
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("ORION_LLM_MODEL", "llama3")
+CLAUDE_ENDPOINT = "https://your-server.com/interpret"
 
 SYSTEM_PROMPT_TEMPLATE = """
 You are the command interpreter for ORION.
@@ -419,3 +424,25 @@ def interpret_natural_language(user_text: str) -> dict:
         cmd["reply"] = _generate_chat_reply(user_text)
 
     return cmd
+
+def get_cloud_command(text, memory={}):
+    try:
+        res = requests.post(
+            CLAUDE_ENDPOINT,
+            json={"text": text, "memory": memory},
+            timeout=10
+        )
+        res.raise_for_status()
+        result = res.json().get("result")
+        return result  # should be a dict: {"intent":..., "args":..., "reply":...}
+    except Exception as e:
+        print(f"[Orion] Cloud AI error: {e}")
+        return {"intent": "unknown", "args": {}, "reply": "I couldn't process that."}
+    
+def handle_user_text(user_text):
+    def run():
+        cmd = get_cloud_command(user_text)
+        reply = dispatch_command(data, cmd)
+        print(f"Orion: {reply}")
+        mac_say(reply)
+    threading.Thread(target=run, daemon=True).start()

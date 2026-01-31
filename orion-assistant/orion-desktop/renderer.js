@@ -325,7 +325,7 @@ if (daemon) return;
       // ---- USER TRANSCRIPT ----
       if (msg.type === "transcript") {
         console.log("Orion heard:", msg.text);
-        // optional: show this somewhere in the UI
+        handleCloudInterpret(msg.text);
         continue;
       }
 
@@ -386,6 +386,32 @@ function setupVoiceButton() {
     }
   });
 }
+
+async function handleCloudInterpret(text) {
+  try {
+    applyHudState("processing");
+
+    const res = await fetch("https://your-server.com/interpret", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text,
+        platform: os.platform()
+      })
+    });
+
+    const data = await res.json();
+    const cmd = JSON.parse(data.result);
+
+    // Send command BACK to Python daemon
+    daemon.stdin.write(JSON.stringify(cmd) + "\n");
+
+  } catch (err) {
+    console.error("Claude interpret failed:", err);
+    applyHudState("idle");
+  }
+}
+
 
 // ======= ORION VOICE =======
 /*
