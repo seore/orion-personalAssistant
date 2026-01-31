@@ -1,5 +1,3 @@
-// renderer.js (Option A safe mode)
-
 // ======= CONFIG =======
 const WEATHER_API_KEY = "2909be0b6d6b4e5597f173222250112";
 let weatherQuery = "auto:ip";
@@ -118,7 +116,7 @@ async function updateWeather() {
 
 // ======= CLAUDE DAEMON =======
 function startDaemon() {
-  const pythonPath = "python3"; // adjust for OS
+  const pythonPath = "python3"; 
   const daemonPath = "./voice_daemon.py";
   window.orionAPI.startDaemon(pythonPath, daemonPath);
 }
@@ -135,7 +133,7 @@ window.orionAPI.onDaemonMessage((msg) => {
 
       if (listenText) {
         if (msg.state === "idle") {
-          listenText.textContent = "Orion is idle.";
+          listenText.textContent = "Titan is idle.";
         } else if (msg.state === "listening") {
           listenText.textContent = "Listening...";
         } else if (msg.state === "processing") {
@@ -151,7 +149,7 @@ window.orionAPI.onDaemonMessage((msg) => {
       if (speakingTimeout) clearTimeout(speakingTimeout);
       speakingTimeout = setTimeout(() => {
         applyHudState("idle");
-        if (listenText) listenText.textContent = "Orion is idle.";
+        if (listenText) listenText.textContent = "Titan is idle.";
       }, Math.min(15000, Math.max(8000, msg.text.length * 80)));
       break;
     }
