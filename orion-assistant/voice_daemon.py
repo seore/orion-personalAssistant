@@ -3,7 +3,7 @@ import time
 import traceback
 
 from orion.core import load_data
-from orion.brain import interpret_natural_language
+from orion.utils import get_cloud_command
 from orion.ui_cli import dispatch_command
 from orion.voice import listen_from_mic, mac_say
 
@@ -115,7 +115,7 @@ def main():
             send({"type": "status", "state": "processing", "text": command_text})
 
             try:
-                cmd = interpret_natural_language(command_text)
+                cmd = get_cloud_command(command_text)
                 reply = dispatch_command(data, cmd)
             except Exception as e:
                 traceback.print_exc()
@@ -140,7 +140,7 @@ def main():
         send({"type": "status", "state": "processing"})
 
         try:
-            cmd = interpret_natural_language(text)
+            cmd = get_cloud_command(text)
             reply = dispatch_command(data, cmd)
         except Exception as e:
             traceback.print_exc()

@@ -7,7 +7,8 @@ from datetime import datetime
 
 from . import core
 from . import memory
-from .brain import get_cloud_command, handle_user_text, summarize_file
+# Import from utils to avoid circular dependency
+from orion.utils import get_cloud_command, summarize_file
 from .voice import listen_from_mic, mac_say
 from .reminders import start_reminder_thread
 from .core import get_due_reminders
@@ -22,7 +23,8 @@ if IS_MAC:
     sys_actions = macos_actions
 elif IS_WIN:
     sys_actions = windows_actions
-else: sys_actions = macos_actions
+else:
+    sys_actions = macos_actions
 
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 
@@ -82,11 +84,10 @@ def get_time_text(location: str | None = None) -> str:
             now = datetime.now()
             return now.strftime("It's %H:%M on %A, %d %B %Y.")
 
-        # For remote locations, use worldtimeapi (free)
         url = "https://worldtimeapi.org/api/timezone"
         res = requests.get(url, timeout=8)
         res.raise_for_status()
-        zones = res.json()  # list of tz strings
+        zones = res.json()
 
         loc_lower = location.lower()
         match = None
@@ -129,7 +130,7 @@ def dispatch_command(data, cmd):
         elif intent == "list_notes":
             return core.list_notes(data)
 
-        # TASKS GENERATION
+        # TASKS
         elif intent == "add_task":
             r = core.add_task(data, args.get("description", ""), args.get("due"))
             return reply or r
@@ -210,7 +211,7 @@ def dispatch_command(data, cmd):
             if not key or value is None:
                 return "What should I remember?"
             memory.set_pref(key, value)
-            return reply or f"Got it, I’ll remember that your {key} is {value}."
+            return reply or f"Got it, I'll remember that your {key} is {value}."
 
         elif intent == "get_preference":
             key = args.get("key")
@@ -218,7 +219,7 @@ def dispatch_command(data, cmd):
                 return "Which preference do you want me to recall?"
             val = memory.get_pref(key)
             if val is None:
-                return f"I don’t have anything saved for {key} yet."
+                return f"I don't have anything saved for {key} yet."
             return reply or f"You told me your {key} is {val}."
         
         # APP LAUNCH AND CLOSE 
@@ -263,7 +264,7 @@ def dispatch_command(data, cmd):
         return f"Something went wrong executing the command: {e}"
 
 
-# ---------- CLI LOOP (unchanged except it uses dispatch_command) ----------
+# ---------- CLI LOOP ----------
 def run_cli():
     print("=== Orion (macOS) ===")
     print("Natural language, voice, reminders with notifications.")
@@ -287,9 +288,11 @@ def run_cli():
                     continue
                 user_text = spoken
             
-            handle_user_text(user_text)
+            # Import handle_user_text locally to avoid circular import
+            from orion.brain import handle_user_text
+            handle_user_text(user_text, data)
 
-            # catch new due reminders immediately (internal ones)
+            # catch new due reminders immediately
             with lock:
                 due = get_due_reminders(data)
             for r in due:
@@ -312,4 +315,3 @@ def run_cli():
         stop_event.set()
         thread.join(timeout=1)
         print("[Orion] Goodbye.")
-

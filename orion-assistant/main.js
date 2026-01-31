@@ -1,0 +1,124 @@
+const { app, BrowserWindow, ipcMain } = require("electron");
+const path = require("path");
+const fetch = require("node-fetch");
+const { spawn } = require("child_process");
+const si = require("systeminformation");
+const os = require("os");
+
+let daemon = null;
+let mainWindow = null;
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1100,
+    height: 700,
+    backgroundColor: "#000000ff",
+    frame: false,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
+
+  mainWindow.loadFile("index.html");
+  // Optional: open DevTools for debugging
+  mainWindow.webContents.openDevTools();
+}
+
+app.whenReady().then(() => {
+  createWindow();
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
+
+app.on("window-all-closed", () => {
+  if (daemon) {
+    daemon.kill();
+    daemon = null;
+  }
+  if (process.platform !== "darwin") app.quit();
+});
+
+/* ==========================
+   IPC HANDLERS
+========================== */
+
+// Fetch from local server
+ipcMain.handle("fetch-from-server", async (event, endpoint, options = {}) => {
+  const url = `http://localhost:3000/${endpoint}`;
+  const res = await fetch(url, options);
+  return res.json();
+});
+
+// Spawn Python daemon - using ipcMain.on for send/receive pattern
+ipcMain.on("start-daemon", (event, { pythonPath, daemonPath }) => {
+  if (daemon) {
+    console.log("Daemon already running");
+    return;
+  }
+
+  const fullPath = path.resolve(__dirname, daemonPath);
+  daemon = spawn(pythonPath, [fullPath]);
+
+  // Forward stdout messages to renderer
+  daemon.stdout.on("data", (data) => {
+    const lines = data.toString().split("\n");
+    lines.forEach((line) => {
+      if (line.trim()) {
+        try {
+          const msg = JSON.parse(line);
+          // Send message to renderer
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send("daemon-message", msg);
+          }
+        } catch (err) {
+          console.log("Daemon stdout:", line);
+        }
+      }
+    });
+  });
+
+  // Log stderr
+  daemon.stderr.on("data", (data) => {
+    console.error("Daemon stderr:", data.toString());
+  });
+
+  // Handle process exit
+  daemon.on("close", (code) => {
+    console.log("Daemon process exited with code", code);
+    daemon = null;
+  });
+
+  console.log("Daemon started");
+});
+
+// Stop daemon
+ipcMain.on("stop-daemon", () => {
+  if (daemon) {
+    daemon.kill();
+    daemon = null;
+    console.log("Daemon stopped");
+  }
+});
+
+// Get system stats
+ipcMain.handle("get-system-stats", async () => {
+  const [load, mem, fsInfo] = await Promise.all([
+    si.currentLoad(),
+    si.mem(),
+    si.fsSize()
+  ]);
+
+  const cpuPercent = Math.round(load.currentLoad);
+  const totalGB = mem.total / 1024 ** 3;
+  const usedGB = (mem.total - mem.available) / 1024 ** 3;
+  const ramPercent = Math.round((usedGB / totalGB) * 100);
+  
+  const disk = fsInfo[0];
+  const usedDisk = (disk.used / 1024 ** 3).toFixed(0);
+  const totalDisk = (disk.size / 1024 ** 3).toFixed(0);
+
+  return { cpuPercent, ramPercent, usedGB, totalGB, usedDisk, totalDisk };
+});

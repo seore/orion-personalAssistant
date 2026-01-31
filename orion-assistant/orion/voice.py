@@ -50,7 +50,7 @@ def mac_say(text: str):
         except Exception:
           pass
     
-    threading.Thred(target=speak_thread, daemon=True).start()
+    threading.Thread(target=speak_thread, daemon=True).start()
 
 
 def listen_from_mic(timeout: float = 2.0, phrase_time_limit: float = 6.0) -> str:
