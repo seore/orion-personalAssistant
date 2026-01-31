@@ -7,7 +7,7 @@ from . import memory
 
 import requests
 import pytz 
-import PyPDF2
+import PyPDF2 # type: ignore
 import textwrap
 
 TIME_ZONES = {
